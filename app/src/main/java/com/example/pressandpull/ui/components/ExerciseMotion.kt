@@ -156,7 +156,7 @@ fun ExerciseMotion(exercise: String, category: String, modifier: Modifier = Modi
                     head(head)
                 }
 
-                MotionType.Press -> {
+                MotionType.OverheadPress -> {
                     val press = phase * h * 0.22f
                     val head = Offset(w * 0.31f, h * 0.59f)
                     val chest = Offset(w * 0.46f, h * 0.66f)
@@ -177,6 +177,57 @@ fun ExerciseMotion(exercise: String, category: String, modifier: Modifier = Modi
                     torso(chest, 55f, 76f)
                     head(head)
                 }
+
+                MotionType.BenchPress -> {
+                    val press = phase * h * 0.18f
+                    val benchY = h * 0.66f
+                    val head = Offset(w * 0.22f, h * 0.58f)
+                    val chest = Offset(w * 0.46f, h * 0.60f)
+                    val hip = Offset(w * 0.68f, h * 0.62f)
+                    val leftHand = Offset(w * 0.40f, h * 0.78f - press)
+                    val rightHand = Offset(w * 0.54f, h * 0.78f - press)
+                    val leftElbow = Offset(w * 0.38f, h * 0.68f - press * 0.4f)
+                    val rightElbow = Offset(w * 0.54f, h * 0.68f - press * 0.4f)
+                    val knee = Offset(w * 0.78f, h * 0.78f)
+                    val foot = Offset(w * 0.86f, h * 0.90f)
+
+                    drawLine(equipment, Offset(w * 0.10f, benchY + 14f), Offset(w * 0.90f, benchY + 14f), strokeWidth = 18f, cap = StrokeCap.Round)
+                    drawLine(equipment, leftHand, rightHand, strokeWidth = 8f, cap = StrokeCap.Round)
+                    capsule(chest, hip, 46f)
+                    capsule(chest, leftElbow, 20f)
+                    capsule(leftElbow, leftHand, 18f)
+                    capsule(chest, rightElbow, 20f)
+                    capsule(rightElbow, rightHand, 18f)
+                    capsule(hip, knee, 24f)
+                    capsule(knee, foot, 22f)
+                    torso(chest, 76f, 50f)
+                    head(head)
+                }
+
+                MotionType.InclinePress -> {
+                    val press = phase * h * 0.16f
+                    val hip = Offset(w * 0.66f, h * 0.74f)
+                    val chest = Offset(w * 0.46f, h * 0.54f)
+                    val head = Offset(w * 0.34f, h * 0.40f)
+                    val leftHand = Offset(w * 0.38f, h * 0.30f - press)
+                    val rightHand = Offset(w * 0.52f, h * 0.26f - press)
+                    val leftElbow = Offset(w * 0.38f, h * 0.46f - press * 0.4f)
+                    val rightElbow = Offset(w * 0.50f, h * 0.42f - press * 0.4f)
+                    val knee = Offset(w * 0.78f, h * 0.86f)
+                    val foot = Offset(w * 0.88f, h * 0.92f)
+
+                    drawLine(equipment, Offset(w * 0.30f, h * 0.92f), Offset(w * 0.70f, h * 0.50f), strokeWidth = 16f, cap = StrokeCap.Round)
+                    drawLine(equipment, leftHand, rightHand, strokeWidth = 8f, cap = StrokeCap.Round)
+                    capsule(chest, hip, 44f)
+                    capsule(chest, leftElbow, 20f)
+                    capsule(leftElbow, leftHand, 18f)
+                    capsule(chest, rightElbow, 20f)
+                    capsule(rightElbow, rightHand, 18f)
+                    capsule(hip, knee, 24f)
+                    capsule(knee, foot, 22f)
+                    torso(chest, 70f, 48f)
+                    head(head)
+                }
             }
         }
         Text(motion.guide, color = AppColor.Muted, style = MaterialTheme.typography.bodySmall)
@@ -187,7 +238,9 @@ private enum class MotionType(val title: String, val guide: String) {
     Squat("스쿼트 패턴", "복압을 먼저 잡고, 엉덩이와 무릎을 함께 접은 뒤 바닥을 밀며 올라옵니다."),
     Pull("풀업 패턴", "완전히 매달린 상태에서 시작하고, 팔꿈치를 아래로 당긴 뒤 천천히 내려옵니다."),
     Row("로우 패턴", "힌지 자세를 고정하고, 갈비뼈를 닫은 채 팔꿈치를 뒤로 당깁니다."),
-    Press("프레스 패턴", "견갑을 고정하고, 바를 곧게 밀어 올린 뒤 팔꿈치를 잠급니다.")
+    OverheadPress("오버헤드프레스 패턴", "견갑을 고정하고, 바를 머리 위로 곧게 밀어 올린 뒤 팔꿈치를 잠급니다."),
+    BenchPress("벤치프레스 패턴", "벤치에 누워 견갑을 모으고, 가슴까지 내린 뒤 바를 수직으로 밀어 올립니다."),
+    InclinePress("인클라인 프레스 패턴", "비스듬한 벤치에 기대어 윗가슴까지 내린 뒤, 사선 위쪽으로 밀어 올립니다.")
 }
 
 private fun motionType(exercise: String, category: String): MotionType {
@@ -196,7 +249,9 @@ private fun motionType(exercise: String, category: String): MotionType {
         "스쿼트" in text || "런지" in text || "하체" in text || "squat" in text || "leg" in text -> MotionType.Squat
         "풀업" in text || "랫풀다운" in text || "당기기" in text || "pull" in text -> MotionType.Pull
         "로우" in text || "row" in text -> MotionType.Row
-        else -> MotionType.Press
+        "인클라인" in text || "incline" in text -> MotionType.InclinePress
+        "벤치" in text || "bench" in text -> MotionType.BenchPress
+        else -> MotionType.OverheadPress
     }
 }
 
