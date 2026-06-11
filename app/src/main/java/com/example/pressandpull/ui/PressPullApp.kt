@@ -18,9 +18,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -28,10 +27,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.pressandpull.data.FitnessDatabase
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.example.pressandpull.model.BodyMetric
-import com.example.pressandpull.model.FitnessSnapshot
-import com.example.pressandpull.model.UserAccount
 import com.example.pressandpull.model.WorkoutLog
 import com.example.pressandpull.ui.design.AppColor
 import com.example.pressandpull.ui.dialogs.BodyMetricDialog
@@ -44,31 +46,35 @@ import com.example.pressandpull.ui.screens.RoutineScreen
 import com.example.pressandpull.ui.screens.WorkoutScreen
 import java.time.LocalDate
 
+private enum class AppRoute(val path: String, val label: String) {
+    Home("home", "홈"),
+    Workouts("workouts", "기록"),
+    Routine("routine", "코치"),
+    Body("body", "인바디")
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PressPullApp(database: FitnessDatabase) {
-    var user by remember { mutableStateOf<UserAccount?>(null) }
-    var selectedTab by remember { mutableIntStateOf(0) }
-    var snapshot by remember { mutableStateOf(FitnessSnapshot()) }
+fun PressPullApp(viewModel: FitnessViewModel = hiltViewModel()) {
+    val uiState by viewModel.uiState.collectAsState()
+    val currentUser = uiState.user
     var workoutDialog by remember { mutableStateOf<WorkoutLog?>(null) }
     var metricDialog by remember { mutableStateOf<BodyMetric?>(null) }
     var showProfile by remember { mutableStateOf(false) }
 
-    fun reload(currentUser: UserAccount? = user) {
-        snapshot = currentUser?.let { database.snapshot(it.id) } ?: FitnessSnapshot()
-    }
-
-    LaunchedEffect(user) { reload(user) }
-
-    if (user == null) {
-        AuthScreen(database = database) {
-            user = it
-            selectedTab = 0
-        }
+    if (currentUser == null) {
+        AuthScreen(
+            authError = uiState.authError,
+            onClearError = viewModel::clearAuthError,
+            onLogin = viewModel::login,
+            onRegister = viewModel::register
+        )
         return
     }
 
-    val currentUser = user ?: return
+    val navController = rememberNavController()
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route ?: AppRoute.Home.path
 
     Scaffold(
         containerColor = AppColor.Paper,
@@ -82,21 +88,22 @@ fun PressPullApp(database: FitnessDatabase) {
                 },
                 actions = {
                     TextButton(onClick = { showProfile = true }) { Text("프로필", color = AppColor.Black) }
-                    TextButton(onClick = { user = null }) { Text("로그아웃", color = AppColor.Black) }
+                    TextButton(onClick = { viewModel.logout() }) { Text("로그아웃", color = AppColor.Black) }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = AppColor.Paper)
             )
         },
         floatingActionButton = {
-            when (selectedTab) {
-                1 -> FloatingActionButton(
+            when (currentRoute) {
+                AppRoute.Workouts.path -> FloatingActionButton(
                     containerColor = AppColor.Black,
                     contentColor = AppColor.Paper,
                     onClick = {
-                        workoutDialog = WorkoutLog(userId = currentUser.id, date = today(), exercise = "", category = "밀기", sets = 3, reps = 10, weightKg = 0.0, memo = "")
+                        workoutDialog = WorkoutLog(userId = currentUser.id, date = today(), exercise = "", category = "Push", sets = 3, reps = 10, weightKg = 0.0, memo = "")
                     }
                 ) { Text("+", fontWeight = FontWeight.Black) }
-                3 -> FloatingActionButton(
+
+                AppRoute.Body.path -> FloatingActionButton(
                     containerColor = AppColor.Black,
                     contentColor = AppColor.Paper,
                     onClick = {
@@ -106,29 +113,42 @@ fun PressPullApp(database: FitnessDatabase) {
             }
         },
         bottomBar = {
-            BottomTabs(selectedTab = selectedTab, onSelected = { selectedTab = it })
+            BottomTabs(
+                currentRoute = currentRoute,
+                onSelected = { route ->
+                    navController.navigate(route.path) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
         }
     ) { padding ->
         Surface(modifier = Modifier.fillMaxSize().padding(padding), color = AppColor.Paper) {
-            when (selectedTab) {
-                0 -> HomeScreen(snapshot)
-                1 -> WorkoutScreen(
-                    workouts = snapshot.workouts,
-                    onEdit = { workoutDialog = it },
-                    onDelete = {
-                        database.deleteWorkout(it.id, currentUser.id)
-                        reload()
-                    }
-                )
-                2 -> RoutineScreen(snapshot)
-                3 -> BodyScreen(
-                    metrics = snapshot.bodyMetrics,
-                    onEdit = { metricDialog = it },
-                    onDelete = {
-                        database.deleteBodyMetric(it.id, currentUser.id)
-                        reload()
-                    }
-                )
+            NavHost(navController = navController, startDestination = AppRoute.Home.path) {
+                composable(AppRoute.Home.path) {
+                    HomeScreen(uiState.snapshot)
+                }
+                composable(AppRoute.Workouts.path) {
+                    WorkoutScreen(
+                        workouts = uiState.snapshot.workouts,
+                        onEdit = { workoutDialog = it },
+                        onDelete = viewModel::deleteWorkout
+                    )
+                }
+                composable(AppRoute.Routine.path) {
+                    RoutineScreen(uiState.snapshot)
+                }
+                composable(AppRoute.Body.path) {
+                    BodyScreen(
+                        metrics = uiState.snapshot.bodyMetrics,
+                        onEdit = { metricDialog = it },
+                        onDelete = viewModel::deleteBodyMetric
+                    )
+                }
             }
         }
     }
@@ -138,8 +158,7 @@ fun PressPullApp(database: FitnessDatabase) {
             user = currentUser,
             onDismiss = { showProfile = false },
             onSave = { editedUser, newPassword ->
-                val updated = database.updateUser(editedUser, newPassword)
-                if (updated != null) user = updated
+                viewModel.updateProfile(editedUser, newPassword)
                 showProfile = false
             }
         )
@@ -150,9 +169,8 @@ fun PressPullApp(database: FitnessDatabase) {
             original = draft,
             onDismiss = { workoutDialog = null },
             onSave = {
-                if (it.id == 0L) database.saveWorkout(it.copy(userId = currentUser.id)) else database.updateWorkout(it.copy(userId = currentUser.id))
+                viewModel.saveWorkout(it.copy(userId = currentUser.id))
                 workoutDialog = null
-                reload()
             }
         )
     }
@@ -162,17 +180,15 @@ fun PressPullApp(database: FitnessDatabase) {
             original = draft,
             onDismiss = { metricDialog = null },
             onSave = {
-                if (it.id == 0L) database.saveBodyMetric(it.copy(userId = currentUser.id)) else database.updateBodyMetric(it.copy(userId = currentUser.id))
+                viewModel.saveBodyMetric(it.copy(userId = currentUser.id))
                 metricDialog = null
-                reload()
             }
         )
     }
 }
 
 @Composable
-private fun BottomTabs(selectedTab: Int, onSelected: (Int) -> Unit) {
-    val labels = listOf("홈", "기록", "코치", "인바디")
+private fun BottomTabs(currentRoute: String, onSelected: (AppRoute) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -181,15 +197,15 @@ private fun BottomTabs(selectedTab: Int, onSelected: (Int) -> Unit) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        labels.forEachIndexed { index, label ->
-            val selected = selectedTab == index
+        AppRoute.entries.forEach { route ->
+            val selected = currentRoute == route.path
             Text(
-                text = label,
+                text = route.label,
                 color = if (selected) AppColor.Paper else AppColor.Black,
                 fontWeight = if (selected) FontWeight.Black else FontWeight.Medium,
                 modifier = Modifier
                     .background(if (selected) AppColor.Black else AppColor.Paper, androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
-                    .clickable { onSelected(index) }
+                    .clickable { onSelected(route) }
                     .padding(horizontal = 18.dp, vertical = 10.dp)
             )
         }
@@ -197,4 +213,3 @@ private fun BottomTabs(selectedTab: Int, onSelected: (Int) -> Unit) {
 }
 
 private fun today(): String = LocalDate.now().toString()
-

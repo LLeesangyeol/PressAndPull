@@ -1,28 +1,66 @@
 # Test Plan
 
-## Unit Test Targets
+## Strategy
 
-- `WorkoutLog.volume` calculation
-- `FitnessSnapshot.totalVolume`
-- `FitnessSnapshot.latestBodyMetric`
-- Routine recommendation rules
+테스트는 핵심 비즈니스 로직, Compose UI, 빌드 가능성, 정적 분석으로 나누어 수행한다.
 
-## Manual Test Cases
+## Unit Test
 
-| ID | Case | Expected |
-| --- | --- | --- |
-| TC-01 | 앱 실행 | 홈 대시보드가 표시된다. |
-| TC-02 | 운동 기록 추가 | Workouts 화면에 새 기록이 표시된다. |
-| TC-03 | 운동 기록 수정 | 수정된 세트/반복/중량이 목록에 반영된다. |
-| TC-04 | 운동 기록 삭제 | 삭제된 기록이 목록에서 사라진다. |
-| TC-05 | 인바디 기록 추가 | InBody 화면에 새 기록이 표시된다. |
-| TC-06 | 잘못된 입력 저장 | 오류 메시지가 표시되고 저장되지 않는다. |
-| TC-07 | 앱 재실행 | SQLite에 저장된 데이터가 유지된다. |
-
-## Execution
+실행 명령:
 
 ```powershell
-.\gradlew.bat assembleDebug
 .\gradlew.bat test
 ```
 
+| Case ID | Target | Scenario | Expected |
+| --- | --- | --- | --- |
+| UT-01 | `WorkoutLog.volume` | 세트, 반복 횟수, 중량이 주어졌을 때 총 볼륨 계산 | `sets * reps * weightKg` 값 반환 |
+| UT-02 | `FitnessSnapshot.totalVolume` | 여러 운동 기록이 있을 때 전체 볼륨 합산 | 모든 운동 볼륨 합계 반환 |
+| UT-03 | `FitnessSnapshot.latestBodyMetric` | 여러 인바디 기록이 있을 때 최신 기록 조회 | 가장 최근 날짜 기록 반환 |
+
+## Compose UI Test
+
+실행 명령:
+
+```powershell
+.\gradlew.bat connectedDebugAndroidTest
+```
+
+| Case ID | Target | Scenario | Expected |
+| --- | --- | --- | --- |
+| UI-01 | `AuthScreen` | 로그인 화면 최초 표시 | 앱 제목, 로그인 버튼, 데모 계정 안내 표시 |
+| UI-02 | `AuthScreen` | 빈 값으로 로그인 버튼 클릭 | 입력 검증 오류 메시지 표시 |
+
+## Build Test
+
+실행 명령:
+
+```powershell
+.\gradlew.bat assembleDebug
+```
+
+| Case ID | Target | Scenario | Expected |
+| --- | --- | --- | --- |
+| BT-01 | Android project | Debug APK 빌드 | 빌드 성공 |
+
+## Static Analysis
+
+실행 명령:
+
+```powershell
+.\gradlew.bat lint
+```
+
+| Case ID | Target | Scenario | Expected |
+| --- | --- | --- | --- |
+| SA-01 | Android lint | 정적 분석 실행 | 치명적 오류 없음 |
+
+## Manual Test
+
+| Case ID | Scenario | Expected |
+| --- | --- | --- |
+| MT-01 | 데모 계정 로그인 | 홈 화면 진입 |
+| MT-02 | 운동 기록 추가/수정/삭제 | 목록에 변경 사항 반영 및 Room DB에 유지 |
+| MT-03 | 인바디 기록 추가/수정/삭제 | 목록에 변경 사항 반영 및 Room DB에 유지 |
+| MT-04 | 하단 탭 화면 이동 | 홈, 기록, 코치, 인바디 화면 이동 |
+| MT-05 | 앱 종료 후 재실행 | 저장된 기록 유지 |

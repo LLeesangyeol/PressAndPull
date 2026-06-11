@@ -37,7 +37,7 @@ fun WorkoutScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
-            PageTitle("운동 기록", "세트, 반복, 중량을 남기고 동작 큐까지 확인합니다.")
+            PageTitle("운동 기록", "세트, 반복, 중량을 남기고 동작 안내까지 확인합니다.")
         }
         if (workouts.isEmpty()) {
             item { EmptyState("아직 운동 기록이 없습니다.") }
@@ -63,4 +63,3 @@ fun WorkoutScreen(
         }
     }
 }
-

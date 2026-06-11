@@ -5,47 +5,75 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Press & Pull UI Mockup</title>
   <style>
-    body { margin: 0; font-family: Arial, sans-serif; background: #eef4f2; color: #15201b; }
-    main { max-width: 960px; margin: 0 auto; padding: 24px; }
+    :root {
+      --paper: #f7faf8;
+      --ink: #151515;
+      --muted: #6d7670;
+      --line: #d9e1dc;
+      --soft: #edf3ef;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; background: var(--soft); color: var(--ink); }
+    main { max-width: 1080px; margin: 0 auto; padding: 24px; }
     h1 { margin: 0 0 8px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-    .phone { background: #f7faf8; border: 1px solid #d6dfda; border-radius: 8px; padding: 16px; min-height: 420px; }
-    .card { background: #fff; border: 1px solid #dfe7e2; border-radius: 8px; padding: 12px; margin: 10px 0; }
-    .nav { display: flex; justify-content: space-between; border-top: 1px solid #d6dfda; padding-top: 10px; margin-top: 16px; font-size: 12px; }
-    .fab { width: 44px; height: 44px; border-radius: 50%; background: #236b4e; color: white; display: grid; place-items: center; float: right; }
-    .chip { display: inline-block; border: 1px solid #b7c9bf; border-radius: 999px; padding: 4px 10px; margin: 4px 4px 4px 0; }
+    p { color: var(--muted); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+    .phone { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 16px; min-height: 430px; position: relative; }
+    .dark { background: var(--ink); color: var(--paper); }
+    .card { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin: 10px 0; }
+    .dark .card { background: #222; border-color: #444; }
+    .nav { display: flex; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 10px; margin-top: 16px; font-size: 12px; }
+    .active { background: var(--ink); color: var(--paper); border-radius: 8px; padding: 6px 10px; }
+    .fab { width: 44px; height: 44px; border-radius: 50%; background: var(--ink); color: white; display: grid; place-items: center; position: absolute; right: 16px; bottom: 16px; font-size: 24px; }
+    .chip { display: inline-block; border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; margin: 4px 4px 4px 0; }
+    .row { display: flex; gap: 8px; }
+    .tile { flex: 1; background: var(--soft); border-radius: 8px; padding: 10px; }
+    label { display: block; font-size: 12px; color: var(--muted); margin-top: 8px; }
+    input { width: 100%; padding: 9px; border: 1px solid var(--line); border-radius: 6px; margin-top: 4px; }
+    button { width: 100%; padding: 10px; border-radius: 8px; border: 0; background: var(--ink); color: var(--paper); margin-top: 12px; }
   </style>
 </head>
 <body>
   <main>
     <h1>Press & Pull</h1>
-    <p>운동 기록, 루틴 추천, 인바디 기록 앱 UI 목업</p>
+    <p>운동 기록, 루틴 추천, 인바디 기록을 관리하는 Android Compose 앱 주요 화면 목업</p>
     <section class="grid">
-      <article class="phone">
-        <h2>Home</h2>
-        <div class="card">운동 기록 12</div>
-        <div class="card">총 볼륨 18,420 kg</div>
-        <div class="card"><strong>오늘의 추천</strong><br>Pull Strength</div>
-        <div class="nav"><span>Home</span><span>Workouts</span><span>Routine</span><span>InBody</span></div>
+      <article class="phone dark">
+        <h2>로그인</h2>
+        <p>아이디와 비밀번호를 입력하세요.</p>
+        <div class="card">
+          <label>아이디</label><input value="demo">
+          <label>비밀번호</label><input value="****">
+          <button>로그인</button>
+          <p>데모 계정: demo / 1234</p>
+        </div>
       </article>
       <article class="phone">
-        <h2>Workouts</h2>
-        <div class="card">Bench Press<br>4세트 x 8회 x 60kg</div>
-        <div class="card">Pull Up<br>4세트 x 6회</div>
+        <h2>홈</h2>
+        <div class="card"><strong>오늘의 1순위 루틴</strong><br>Pull Strength</div>
+        <div class="row">
+          <div class="tile">운동 기록<br><strong>12</strong></div>
+          <div class="tile">총 볼륨<br><strong>18,420kg</strong></div>
+        </div>
+        <div class="nav"><span class="active">홈</span><span>기록</span><span>코치</span><span>인바디</span></div>
+      </article>
+      <article class="phone">
+        <h2>운동 기록</h2>
+        <div class="card"><strong>Bench Press</strong><br>4세트 x 8회 x 60kg<br>수정 / 삭제</div>
+        <div class="card"><strong>Pull Up</strong><br>4세트 x 6회<br>수정 / 삭제</div>
         <div class="fab">+</div>
       </article>
       <article class="phone">
-        <h2>Routine</h2>
-        <span class="chip">등/이두 집중</span>
-        <div class="card">Pull Up 4세트<br>Barbell Row 4x8<br>Face Pull 3x15</div>
+        <h2>루틴 코치</h2>
+        <span class="chip">Push</span><span class="chip">Pull</span><span class="chip">Legs</span>
+        <div class="card"><strong>Pull Strength</strong><br>Pull Up 4세트<br>Barbell Row 4x8<br>Face Pull 3x15</div>
       </article>
       <article class="phone">
-        <h2>InBody</h2>
-        <div class="card">2026-06-04<br>72.4kg / 골격근 34.1kg / 체지방 17.8%</div>
+        <h2>인바디</h2>
+        <div class="card">2026-06-04<br>체중 72.4kg<br>골격근량 34.1kg<br>체지방률 17.8%</div>
         <div class="fab">+</div>
       </article>
     </section>
   </main>
 </body>
 </html>
-

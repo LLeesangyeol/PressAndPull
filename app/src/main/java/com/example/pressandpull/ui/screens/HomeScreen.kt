@@ -30,7 +30,7 @@ fun HomeScreen(snapshot: FitnessSnapshot) {
         verticalArrangement = Arrangement.spacedBy(AppDimen.CardPadding)
     ) {
         item {
-            PageTitle("홈", "오늘 추천 루틴과 주요 동작을 빠르게 확인하세요.")
+            PageTitle("홈", "오늘 추천 루틴과 주요 운동 지표를 빠르게 확인하세요.")
         }
         item {
             AppCard(inverted = true) {
@@ -47,7 +47,7 @@ fun HomeScreen(snapshot: FitnessSnapshot) {
         }
         item {
             AppCard {
-                Text("추천 루틴 더보기", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                Text("추천 루틴 미리보기", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                 routines.take(3).forEachIndexed { index, routine ->
                     Text("${index + 1}. ${routine.title} - ${routine.focus}", color = if (index == 0) AppColor.Black else AppColor.Muted)
                 }
@@ -67,4 +67,3 @@ fun HomeScreen(snapshot: FitnessSnapshot) {
         }
     }
 }
-

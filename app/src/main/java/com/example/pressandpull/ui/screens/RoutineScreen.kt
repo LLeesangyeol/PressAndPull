@@ -30,7 +30,7 @@ fun RoutineScreen(snapshot: FitnessSnapshot) {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
-            PageTitle("코치", "추천 루틴과 운동별 동작을 한 번에 확인합니다.")
+            PageTitle("코치", "추천 루틴과 운동별 동작 안내를 한 번에 확인합니다.")
         }
         items(routines) { routine ->
             AppCard {

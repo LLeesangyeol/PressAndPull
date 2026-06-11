@@ -1,36 +1,54 @@
 # Implementation Log
 
-## 2026-06-07
+## 2026-06-07 Initial Implementation
 
-- 기존 기본 Compose 템플릿을 운동 관리 앱으로 전환했다.
-- 외부 API 키 없이 실행 가능하도록 Android `SQLiteOpenHelper` 기반 저장소를 구현했다.
-- `WorkoutLog`, `BodyMetric`, `RoutineRecommendation`, `FitnessSnapshot` 모델을 추가했다.
-- 홈, 운동 기록, 루틴 추천, 인바디 하단 탭 구조를 구현했다.
-- 운동 기록과 인바디 기록의 추가/수정/삭제 Dialog를 구현했다.
-- Supabase PostgreSQL + 로컬 SQLite 캐시 구조를 권장 DB 아키텍처로 문서화했다.
-- `assembleDebug` 빌드를 실행해 APK 생성 가능 상태를 확인했다.
+- Kotlin + Jetpack Compose 기반 Press & Pull 앱을 구성했다.
+- 운동 기록, 인바디 기록, 루틴 추천 모델을 추가했다.
+- 로그인/회원가입, 홈, 운동 기록, 루틴, 인바디 화면을 구현했다.
+- 운동 기록 및 인바디 기록의 CRUD Dialog를 구현했다.
+- Compose Canvas 기반 운동 동작 안내 컴포넌트를 추가했다.
+- 초기에는 SQLiteOpenHelper 기반 로컬 저장소로 데이터 영속화를 구현했다.
 
-## 2026-06-07 추가 개선
+## 2026-06-11 Architecture Upgrade
 
-- 로컬 로그인/회원가입 기능을 추가했다.
-- `users` 테이블을 추가하고 운동/인바디 데이터를 `userId` 기준으로 분리했다.
-- UI를 블랙앤화이트 톤으로 재설계했다.
-- 로그인 화면을 검정 배경의 첫 화면으로 구성했다.
-- Compose Canvas 애니메이션으로 운동별 모션 안내를 추가했다.
-- Bench/Press, Pull Up, Row, Squat/Leg 계열 동작 큐를 표시한다.
-- `assembleDebug`, `test`를 다시 실행해 통과를 확인했다.
+- 권장 스택 충족을 위해 SQLiteOpenHelper를 Room으로 교체했다.
+- `UserEntity`, `WorkoutLogEntity`, `BodyMetricEntity`를 추가했다.
+- `FitnessDao`를 추가하여 사용자, 운동 기록, 인바디 기록 쿼리를 정의했다.
+- `FitnessDatabase`를 RoomDatabase로 변경했다.
+- `FitnessRepository`를 추가해 데이터 접근을 단일 계층으로 캡슐화했다.
+- `FitnessViewModel`을 추가해 UI 상태와 CRUD 이벤트를 관리하도록 했다.
+- Hilt를 적용하고 `PressAndPullApplication`, `AppModule`, `@AndroidEntryPoint`, `@HiltViewModel`을 추가했다.
+- 기존 상태 기반 탭 전환을 Navigation Compose `NavHost` 기반 화면 이동으로 변경했다.
+- `MainActivity`는 앱 진입점 역할만 수행하도록 단순화했다.
+- `AuthScreen`의 로그인/회원가입 처리를 ViewModel 이벤트 기반으로 변경했다.
+- 깨진 한국어 UI 문구 일부를 정상 한국어로 정리했다.
 
-## 2026-06-07 구조 및 UI 개선
+## 2026-06-11 Test And Documentation
 
-- 루트에 몰려 있던 모델, DB, UI 코드를 패키지별로 분리했다.
-- `model`, `data`, `ui/screens`, `ui/components`, `ui/design`, `ui/dialogs` 구조를 추가했다.
-- `MainActivity`는 앱 진입점 역할만 하도록 축소했다.
-- 공통 카드, 입력 필드, 통계 타일, 운동 모션 컴포넌트를 분리했다.
-- 홈 화면에 검정 추천 카드와 명확한 통계 타일을 배치해 블랙앤화이트 톤을 강화했다.
-- 로그인 화면, 운동 기록 카드, 루틴 카드, 인바디 카드의 정보 위계를 정리했다.
-- 구조 변경 후 `assembleDebug`, `test` 통과를 확인했다.
+- Compose UI 테스트 `AuthScreenTest`를 추가했다.
+- README를 최신 실행/빌드/테스트 방법 기준으로 갱신했다.
+- docs 필수 산출물을 현재 구현 기준으로 갱신했다.
+- `assembleDebug`, `test`, `lint` 실행 결과를 `test_result.md`에 기록했다.
+
+## Changed Files
+
+- `gradle/libs.versions.toml`: Room, Navigation Compose, Hilt, KSP 의존성 추가
+- `build.gradle.kts`: KSP, Hilt 플러그인 추가
+- `app/build.gradle.kts`: Room/Hilt/Navigation 의존성 추가
+- `gradle.properties`: AGP 9 + KSP 호환 설정 추가
+- `AndroidManifest.xml`: Hilt Application 등록
+- `MainActivity.kt`: Hilt 진입점 적용
+- `PressAndPullApplication.kt`: Hilt Application 추가
+- `data/*`: Room 데이터 계층 추가
+- `di/AppModule.kt`: DB/DAO 의존성 제공
+- `ui/FitnessViewModel.kt`: MVVM 상태관리 추가
+- `ui/PressPullApp.kt`: Navigation Compose 적용
+- `ui/screens/AuthScreen.kt`: ViewModel 이벤트 기반 로그인/회원가입 UI로 변경
+- `app/src/androidTest/.../AuthScreenTest.kt`: Compose UI 테스트 추가
 
 ## Trade-Offs
 
-- Room을 사용하면 타입 안정성과 DAO 테스트가 좋아지지만, 현재 프로젝트는 즉시 실행 가능성을 우선해 추가 의존성 없이 SQLite를 사용했다.
-- 실제 어디서든 접근 가능한 데이터는 원격 DB가 필요하다. 현재 구현은 로컬 영속 저장이며, 운영 버전에서는 Supabase 동기화 계층을 추가해야 한다.
+- 원격 DB는 사용하지 않았다. 과제 조건상 로컬 또는 원격 저장소 중 하나면 되며, 오프라인 핵심 기능을 보장하기 위해 Room 로컬 DB를 선택했다.
+- Room schema export는 제출 범위에서 필수 산출물이 아니므로 `exportSchema=false`로 설정했다.
+- AGP 9와 KSP 조합에서 generated source 등록 호환 이슈가 있어 `android.disallowKotlinSourceSets=false` 설정을 추가했다.
+- Compose UI 테스트는 기기/에뮬레이터가 필요하므로 코드에 포함하고 실행 방법을 문서화했다.

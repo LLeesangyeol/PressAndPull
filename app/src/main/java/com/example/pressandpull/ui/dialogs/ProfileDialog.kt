@@ -64,4 +64,3 @@ fun ProfileDialog(
         dismissButton = { TextButton(onClick = onDismiss) { Text("취소", color = AppColor.Black) } }
     )
 }
-

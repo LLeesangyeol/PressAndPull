@@ -21,8 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.pressandpull.data.FitnessDatabase
-import com.example.pressandpull.model.UserAccount
 import com.example.pressandpull.ui.components.AppCard
 import com.example.pressandpull.ui.components.CleanInput
 import com.example.pressandpull.ui.components.PasswordInput
@@ -30,7 +28,12 @@ import com.example.pressandpull.ui.components.PrimaryButton
 import com.example.pressandpull.ui.design.AppColor
 
 @Composable
-fun AuthScreen(database: FitnessDatabase, onLoggedIn: (UserAccount) -> Unit) {
+fun AuthScreen(
+    authError: String?,
+    onClearError: () -> Unit,
+    onLogin: (String, String) -> Unit,
+    onRegister: (String, String, String, String, String) -> Unit
+) {
     var isSignup by remember { mutableStateOf(false) }
     var username by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
@@ -49,7 +52,7 @@ fun AuthScreen(database: FitnessDatabase, onLoggedIn: (UserAccount) -> Unit) {
         Column(verticalArrangement = Arrangement.spacedBy(18.dp), modifier = Modifier.fillMaxWidth()) {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("PRESS & PULL", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black, color = AppColor.Paper)
-                Text("운동 기록, 루틴 추천, 동작 코칭을 한 곳에서 관리합니다.", color = AppColor.Line)
+                Text("운동 기록, 루틴 추천, 자세 코칭을 한곳에서 관리합니다.", color = AppColor.Line)
             }
             AppCard {
                 Text(if (isSignup) "회원가입" else "로그인", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
@@ -61,26 +64,30 @@ fun AuthScreen(database: FitnessDatabase, onLoggedIn: (UserAccount) -> Unit) {
                     CleanInput("생년월일", birthDate) { birthDate = it }
                 }
                 PasswordInput("비밀번호", password) { password = it }
-                if (error.isNotBlank()) Text(error, color = MaterialTheme.colorScheme.error)
+                val visibleError = error.ifBlank { authError.orEmpty() }
+                if (visibleError.isNotBlank()) Text(visibleError, color = MaterialTheme.colorScheme.error)
                 Spacer(Modifier.height(2.dp))
                 PrimaryButton(if (isSignup) "가입하기" else "로그인") {
                     error = ""
+                    onClearError()
                     if (username.isBlank() || password.length < 4 || (isSignup && (name.isBlank() || email.isBlank() || birthDate.isBlank()))) {
                         error = "모든 항목을 입력하세요. 비밀번호는 4자 이상이어야 합니다."
                         return@PrimaryButton
                     }
-                    val nextUser = if (isSignup) {
-                        database.register(username, name, email, birthDate, password)
+                    if (isSignup) {
+                        onRegister(username, name, email, birthDate, password)
                     } else {
-                        database.login(username, password)
-                    }
-                    if (nextUser == null) {
-                        error = if (isSignup) "이미 사용 중인 아이디 또는 이메일입니다." else "아이디 또는 비밀번호가 올바르지 않습니다."
-                    } else {
-                        onLoggedIn(nextUser)
+                        onLogin(username, password)
                     }
                 }
-                OutlinedButton(modifier = Modifier.fillMaxWidth(), onClick = { isSignup = !isSignup; error = "" }) {
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        isSignup = !isSignup
+                        error = ""
+                        onClearError()
+                    }
+                ) {
                     Text(if (isSignup) "로그인으로 돌아가기" else "회원가입", color = AppColor.Black)
                 }
                 Text("데모 계정: 아이디 demo / 비밀번호 1234", color = AppColor.Muted, style = MaterialTheme.typography.labelMedium)
@@ -88,4 +95,3 @@ fun AuthScreen(database: FitnessDatabase, onLoggedIn: (UserAccount) -> Unit) {
         }
     }
 }
-

@@ -1,35 +1,65 @@
-# Data Model And DB Plan
+# Data Model And ERD
 
-## Recommended Production DB
+## Storage
 
-Supabase PostgreSQL을 권장한다.
+현재 구현은 Room 로컬 데이터베이스를 사용한다. 데이터베이스 파일은 Android 앱 내부 저장소에 생성되며, 네트워크가 없어도 로그인 데모 계정, 운동 기록, 인바디 기록의 핵심 기능이 동작한다.
 
-### Why
+- Database: `FitnessDatabase`
+- DAO: `FitnessDao`
+- Repository: `FitnessRepository`
+- DB file: `press_and_pull.db`
 
-- PostgreSQL 기반이라 운동/인바디/루틴 데이터를 관계형으로 안정적으로 관리할 수 있다.
-- Supabase Auth와 Row Level Security로 사용자별 데이터 접근 제어가 쉽다.
-- REST API와 Kotlin 클라이언트로 Android 앱에서 접근 가능하다.
-- 무료 플랜으로 MVP를 시작하기 쉽고, 운영 시 백업과 마이그레이션 관리가 가능하다.
+## Tables
 
-## Build Plan
+### users
 
-1. Supabase 프로젝트 생성
-2. `profiles`, `workout_logs`, `body_metrics`, `routine_templates` 테이블 생성
-3. Supabase Auth 활성화
-4. 모든 테이블에 `user_id` 추가
-5. Row Level Security 정책 적용: `auth.uid() = user_id`
-6. Android 앱은 로컬 SQLite/Room에 먼저 저장
-7. 네트워크가 가능하면 Supabase와 변경분 동기화
+사용자 계정 정보를 저장한다. 비밀번호는 평문이 아니라 SHA-256 해시값으로 저장한다.
 
-## Current Implementation DB
+| Column | Type | Description |
+| --- | --- | --- |
+| id | Long | Primary Key, auto generated |
+| username | String | 로그인 아이디, unique |
+| name | String | 사용자 이름 |
+| email | String | 이메일, unique |
+| birthDate | String | 생년월일 |
+| passwordHash | String | SHA-256 비밀번호 해시 |
+| createdAt | String | 계정 생성일 |
 
-현재 앱은 외부 API 키 없이 실행되도록 Android 기본 SQLite를 사용한다.
+### workout_logs
 
-- DB file: `/data/data/com.example.pressandpull/databases/press_and_pull.db`
-- Tables: `users`, `workout_logs`, `body_metrics`
-- Demo account: `demo` / `1234`
-- User fields: `username`, `name`, `email`, `birthDate`, `passwordHash`
-- 운동 기록과 인바디 기록은 `userId`로 사용자별 분리 저장된다.
+운동 기록을 저장한다. `userId`로 사용자별 데이터를 분리한다.
+
+| Column | Type | Description |
+| --- | --- | --- |
+| id | Long | Primary Key, auto generated |
+| userId | Long | users.id Foreign Key |
+| date | String | 운동 날짜 |
+| exercise | String | 운동명 |
+| category | String | 운동 부위 |
+| sets | Int | 세트 수 |
+| reps | Int | 반복 횟수 |
+| weightKg | Double | 중량 |
+| memo | String | 메모 |
+
+### body_metrics
+
+인바디/신체 지표 기록을 저장한다. `userId`로 사용자별 데이터를 분리한다.
+
+| Column | Type | Description |
+| --- | --- | --- |
+| id | Long | Primary Key, auto generated |
+| userId | Long | users.id Foreign Key |
+| date | String | 측정 날짜 |
+| weightKg | Double | 체중 |
+| skeletalMuscleKg | Double | 골격근량 |
+| bodyFatPercent | Double | 체지방률 |
+| memo | String | 메모 |
+
+## Relationships
+
+- `users` 1:N `workout_logs`
+- `users` 1:N `body_metrics`
+- 사용자 삭제 시 관련 운동/인바디 기록은 Room ForeignKey Cascade 정책으로 삭제된다.
 
 ## ERD
 
@@ -37,46 +67,36 @@ Supabase PostgreSQL을 권장한다.
 erDiagram
     USERS ||--o{ WORKOUT_LOGS : owns
     USERS ||--o{ BODY_METRICS : owns
-    USERS ||--o{ ROUTINE_TEMPLATES : owns
 
     USERS {
-        uuid id PK
-        text email
-        timestamptz created_at
+        long id PK
+        string username UK
+        string name
+        string email UK
+        string birthDate
+        string passwordHash
+        string createdAt
     }
 
     WORKOUT_LOGS {
-        bigint id PK
-        uuid user_id FK
-        date workout_date
-        text exercise
-        text category
+        long id PK
+        long userId FK
+        string date
+        string exercise
+        string category
         int sets
         int reps
-        numeric weight_kg
-        text memo
-        timestamptz created_at
-        timestamptz updated_at
+        double weightKg
+        string memo
     }
 
     BODY_METRICS {
-        bigint id PK
-        uuid user_id FK
-        date measured_date
-        numeric weight_kg
-        numeric skeletal_muscle_kg
-        numeric body_fat_percent
-        text memo
-        timestamptz created_at
-        timestamptz updated_at
-    }
-
-    ROUTINE_TEMPLATES {
-        bigint id PK
-        uuid user_id FK
-        text title
-        text focus
-        jsonb exercises
-        timestamptz created_at
+        long id PK
+        long userId FK
+        string date
+        double weightKg
+        double skeletalMuscleKg
+        double bodyFatPercent
+        string memo
     }
 ```

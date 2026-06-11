@@ -51,16 +51,19 @@ fun WorkoutDialog(original: WorkoutLog, onDismiss: () -> Unit, onSave: (WorkoutL
             }
         },
         confirmButton = {
-            Button(colors = ButtonDefaults.buttonColors(containerColor = AppColor.Black, contentColor = AppColor.Paper), onClick = {
-                val parsedSets = sets.toIntOrNull()
-                val parsedReps = reps.toIntOrNull()
-                val parsedWeight = weight.toDoubleOrNull()
-                if (exercise.isBlank() || parsedSets == null || parsedReps == null || parsedWeight == null || parsedSets <= 0 || parsedReps <= 0 || parsedWeight < 0) {
-                    error = "운동명, 세트, 반복 횟수, 중량을 올바르게 입력하세요."
-                } else {
-                    onSave(original.copy(date = date, exercise = exercise, category = category, sets = parsedSets, reps = parsedReps, weightKg = parsedWeight, memo = memo))
+            Button(
+                colors = ButtonDefaults.buttonColors(containerColor = AppColor.Black, contentColor = AppColor.Paper),
+                onClick = {
+                    val parsedSets = sets.toIntOrNull()
+                    val parsedReps = reps.toIntOrNull()
+                    val parsedWeight = weight.toDoubleOrNull()
+                    if (exercise.isBlank() || parsedSets == null || parsedReps == null || parsedWeight == null || parsedSets <= 0 || parsedReps <= 0 || parsedWeight < 0) {
+                        error = "운동명, 세트, 반복 횟수, 중량을 올바르게 입력하세요."
+                    } else {
+                        onSave(original.copy(date = date, exercise = exercise, category = category, sets = parsedSets, reps = parsedReps, weightKg = parsedWeight, memo = memo))
+                    }
                 }
-            }) { Text("저장") }
+            ) { Text("저장") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("취소", color = AppColor.Black) } }
     )
@@ -89,16 +92,19 @@ fun BodyMetricDialog(original: BodyMetric, onDismiss: () -> Unit, onSave: (BodyM
             }
         },
         confirmButton = {
-            Button(colors = ButtonDefaults.buttonColors(containerColor = AppColor.Black, contentColor = AppColor.Paper), onClick = {
-                val parsedWeight = weight.toDoubleOrNull()
-                val parsedMuscle = muscle.toDoubleOrNull()
-                val parsedFat = fat.toDoubleOrNull()
-                if (parsedWeight == null || parsedMuscle == null || parsedFat == null || parsedWeight <= 0 || parsedMuscle < 0 || parsedFat < 0) {
-                    error = "체중, 골격근량, 체지방률을 올바르게 입력하세요."
-                } else {
-                    onSave(original.copy(date = date, weightKg = parsedWeight, skeletalMuscleKg = parsedMuscle, bodyFatPercent = parsedFat, memo = memo))
+            Button(
+                colors = ButtonDefaults.buttonColors(containerColor = AppColor.Black, contentColor = AppColor.Paper),
+                onClick = {
+                    val parsedWeight = weight.toDoubleOrNull()
+                    val parsedMuscle = muscle.toDoubleOrNull()
+                    val parsedFat = fat.toDoubleOrNull()
+                    if (parsedWeight == null || parsedMuscle == null || parsedFat == null || parsedWeight <= 0 || parsedMuscle < 0 || parsedFat < 0) {
+                        error = "체중, 골격근량, 체지방률을 올바르게 입력하세요."
+                    } else {
+                        onSave(original.copy(date = date, weightKg = parsedWeight, skeletalMuscleKg = parsedMuscle, bodyFatPercent = parsedFat, memo = memo))
+                    }
                 }
-            }) { Text("저장") }
+            ) { Text("저장") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("취소", color = AppColor.Black) } }
     )
@@ -107,9 +113,8 @@ fun BodyMetricDialog(original: BodyMetric, onDismiss: () -> Unit, onSave: (BodyM
 @Composable
 private fun CategoryChips(selected: String, onSelected: (String) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
-        listOf("밀기", "당기기", "하체", "코어").forEach { item ->
+        listOf("Push", "Pull", "Legs", "Core").forEach { item ->
             FilterChip(selected = selected == item, onClick = { onSelected(item) }, label = { Text(item) })
         }
     }
 }
-
